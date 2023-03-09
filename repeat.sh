@@ -72,7 +72,7 @@ nrep=$opt_n
 # コンテンツを入力
 cat ${text:+"$text"}                                                 |
 
-awk '
+gawk '
 BEGIN {
   nrep = '"${nrep}"';
 }
