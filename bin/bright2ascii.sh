@@ -8,9 +8,12 @@ set -eu
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
 	Usage   : ${0##*/} [輝度値ファイル]
-	Options :
+	Options : -n<数列> -s<文字列>
 
 	輝度値をアスキーアート文字に変換する。
+
+	-nオプションで輝度値の境界を指定できる。数字は","で区切る。デフォルトは"51,102,160,214"。
+	-sオプションで表示文字を指定できる。文字は","で区切る。デフォルトは"　,・,＋,※,■"。
 	USAGE
   exit 1
 }
@@ -21,6 +24,8 @@ print_usage_and_exit () {
 
 # 変数を初期化
 opr=''
+opt_n='51,102,160,214'
+opt_s='　,・,＋,※,■'
 
 # 引数をパース
 i=1
@@ -28,6 +33,8 @@ for arg in ${1+"$@"}
 do
   case "$arg" in
     -h|--help|--version) print_usage_and_exit ;;
+    -n*)                 opt_n=${arg#-n}      ;;
+    -s*)                 opt_s=${arg#-s}      ;;
     *)
       if [ $i -eq $# ] && [ -z "$opr" ] ; then
         opr=$arg
@@ -51,27 +58,66 @@ else
   :
 fi
 
+# 有効な数列であるか判定
+if ! printf '%s' "$opt_n" | grep -Eq '^[0-9]+(,[0-9]+)*$'; then
+  echo "${0##*/}: \"$opt_n\" invalid number sequence" 1>&2
+  exit 31
+fi
+
+# 有効な文字列であるか判定
+if ! printf '%s' "$opt_s" | grep -Eq '^.(,.)*$'; then
+  echo "${0##*/}: \"$opt_s\" invalid character sequence" 1>&2
+  exit 41
+fi
+
 # パラメータを決定
 bright=$opr
+nums=$opt_n
+chas=$opt_s
 
 ######################################################################
 # 本体処理
 ######################################################################
 
 # 輝度値を入力
-cat ${bright-:"$bright"}                                             |
 
 # 出力文字を決定
-awk  '
-  {
-    for (i = 1; i <= NF; i++) {
-      if      ($i <    51) { printf "%s", "　"; }
-      else if ($i <   102) { printf "%s", "・"; }
-      else if ($i <   160) { printf "%s", "＋"; }
-      else if ($i <   214) { printf "%s", "※"; }
-      else                 { printf "%s", "■"; }
+gawk  '
+BEGIN {
+  # パラメータを設定
+  nums = "'"${nums}"'";
+  chas = "'"${chas}"'";
+
+  # 数列と文字列を配列に分離
+  nn = split(nums, nary, ",");
+  cn = split(chas, cary, ",");
+
+  # 数字と文字の数に不整合があればエラーを出力して終了
+  if (nn != (cn - 1)) {
+     print "'"${0##*/}"': invalid sequence length" > "/dev/stderr";
+     exit 51;
+  }
+
+  # 数列の大小関係に不整合があればエラーを出力して終了
+  for (i = 1; i <= (nn-1); i++) {
+    if (nary[i] >= nary[i+1]) {
+      print "'"${0##*/}"': invalid number sequence" > "/dev/stderr";
+      exit 52;
+    }
+  }
+}
+
+{
+  for (i = 1; i <= NF; i++) {
+    # 最後尾以外の区間に含まれる場合にこのコードで捕捉
+    for (j = 1; j <= nn; j++) {
+      if ($i <= nary[j]) { printf "%s", cary[j]; break; }
     }
 
-    print "";
+    # 最後尾の区間に含まれる場合はこのコードで捕捉
+    if (j == (nn+1)) { printf "%s", cary[j]; }
   }
-'
+
+  print "";
+}
+' ${bright-:"$bright"}
