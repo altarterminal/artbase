@@ -14,9 +14,10 @@ use clap::Parser;
 
 struct Param
 {
-    reader: Box<dyn BufRead>,
-    msec:   i32,
-    height: i32,
+    reader:   Box<dyn BufRead>,
+    msec:     u32,
+    height:   u32,
+    initwait: u32,
 }
 
 // ###################################################################
@@ -27,12 +28,45 @@ struct Param
 pub struct Arg
 {
     #[clap(short='r', long="row")]
-    height: i32,
+    height: u32,
 
     #[clap(short='m', long="msec")]
-    msec:  i32,
+    msec: u32,
+
+    #[clap(short='w', long="wait", default_value="0u32")]
+    initwait: u32,
 
     filename: Option<String>,
+}
+
+// ###################################################################
+// 時間
+// ###################################################################
+
+pub struct Time
+{
+    instant: Instant,
+}
+
+impl Time {
+    fn start_time(&mut self) {
+        self.instant = Instant::now();
+    }
+
+    fn end_time(&mut self) -> (u32, u32) {
+        let durtime = self.instant.elapsed();
+
+        let sec  = durtime.as_secs().try_into().unwrap();
+        let msec = durtime.as_millis().try_into().unwrap();
+
+        (sec, msec)
+    }
+
+    fn wait_msec(msec: u32) {
+        if msec > 0 {
+            sleep(Duration::from_millis(msec.into()));
+        }
+    }
 }
 
 // ###################################################################
@@ -59,6 +93,7 @@ fn get_param() -> Param
     let arg = Arg::parse();
     let height   = arg.height;
     let msec     = arg.msec;
+    let initwait = arg.initwait;
     let filename = arg.filename;
 
     let reader = match filename {
@@ -82,12 +117,12 @@ fn get_param() -> Param
         },
     };
 
-    Param { reader, msec, height, }
+    Param { reader, msec, height, initwait }
 }
 
 fn output_oneframe(
     reader: &mut Box<dyn BufRead>,
-    height: i32,
+    height: u32,
 ) -> bool
 {
     let mut cntline = 0;
@@ -127,33 +162,37 @@ fn main()
     // ===============================================================
 
     // パラメータをパース
-    let Param { mut reader, msec, height } = get_param();
+    let Param { mut reader, msec, height, initwait } = get_param();
 
     // ===============================================================
     // 本体処理
     // ===============================================================
+
+    // 時間計測用のオブジェクトを用意
+    let mut time = Time { instant: Instant::now() };
+
+    // 待機を実施
+    Time::wait_msec(initwait);
     
     loop {
         // 開始時刻（基準）を保存
-        let starttime = Instant::now();
+        time.start_time();
 
         // 入力が存在する限り出力を実行
         if ! output_oneframe(&mut reader, height) { break; }
 
         // 出力処理の経過時間を取得
-        let durationtime = starttime.elapsed();
-        let durationsec  = durationtime.as_secs();
-        let durationmsec = i32::try_from(durationtime.as_millis()).unwrap();
+        let (dursec, durmsec) = time.end_time();
 
         // 待機時間を計算
         let waittime =
-            if durationsec > 0 || durationmsec > msec {
-                0u64
+            if dursec > 0 || durmsec > msec {
+                0u32
             } else {
-                (msec - durationmsec).try_into().unwrap()
+                (msec - durmsec).try_into().unwrap()
             };
         
         // 待機
-        sleep(Duration::from_millis(waittime));
+        Time::wait_msec(waittime);
     }
 }
