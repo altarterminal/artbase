@@ -11,10 +11,10 @@ set -eu
 
 # ビルドを実行
 (
-  cd ./src/linevalve
+  cd ./rust/linevalve
 
   cargo build --release
 )
 
 # バイナリを配置
-mv ./src/linevalve/target/release/linevalve ./bin
+mv ./rust/linevalve/target/release/linevalve ./bin
