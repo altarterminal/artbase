@@ -10,11 +10,7 @@ use std::time::{
 
 use std::thread::sleep;
 
-use clap::{
-    arg,
-    command,
-    value_parser,
-};
+use clap::Parser;
 
 struct Param
 {
@@ -22,6 +18,26 @@ struct Param
     msec:   i32,
     height: i32,
 }
+
+// ###################################################################
+// パラメータ
+// ###################################################################
+
+#[derive(Debug,Parser)]
+pub struct Arg
+{
+    #[clap(short='r', long="row")]
+    height: i32,
+
+    #[clap(short='m', long="msec")]
+    msec:  i32,
+
+    filename: Option<String>,
+}
+
+// ###################################################################
+// ユーティリティ
+// ###################################################################
 
 fn eprint_exit(
     emsg: &str,
@@ -37,26 +53,15 @@ fn eprint_exit(
     std::process::exit(en);
 }
     
-fn parse_arg() -> Param
+fn get_param() -> Param
 {
-    let matches = command!()
-        .arg(arg!([file] "Optional name to operato on")
-             .required(false)
-        )
-        .arg(arg!(-m --msec <MSEC> "the time to wait in milli second")
-             .required(true)
-             .value_parser(value_parser!(i32).range(1..10000)),
-        )
-        .arg(arg!(-r --rows <ROWS> "the unit height of output")
-             .required(true)
-             .value_parser(value_parser!(i32).range(1..100)),
-        )
-        .get_matches();
+    // 引数を取得
+    let arg = Arg::parse();
+    let height   = arg.height;
+    let msec     = arg.msec;
+    let filename = arg.filename;
 
-    let msec   = *matches.get_one::<i32>("msec").unwrap();
-    let height = *matches.get_one::<i32>("rows").unwrap();
-    
-    let reader = match matches.get_one::<String>("file") {
+    let reader = match filename {
         Some(filename) => {
             // 通常ファイルを指定された場合
             
@@ -111,6 +116,10 @@ fn output_oneframe(
     true
 }
 
+// ###################################################################
+// 本体処理
+// ###################################################################
+
 fn main()
 {
     // ===============================================================
@@ -118,7 +127,7 @@ fn main()
     // ===============================================================
 
     // パラメータをパース
-    let Param { mut reader, msec, height } = parse_arg();
+    let Param { mut reader, msec, height } = get_param();
 
     // ===============================================================
     // 本体処理
