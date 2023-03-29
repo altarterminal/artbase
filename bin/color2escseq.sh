@@ -71,7 +71,7 @@ else
   cat ${content:+"$content"}
 fi                                                                   |
 
-awk -v FS='' -v OFS='' '
+gawk -v FS='' -v OFS='' '
 BEGIN {
   # 表示文字
   c   = "■"
