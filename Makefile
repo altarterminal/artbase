@@ -6,8 +6,8 @@ RUSTBINS := $(addprefix $(BINDIR)/,$(RUSTAPPS))
 
 define BUILD_RUST_RELEASE
 $(BINDIR)/$(1):
-	( cd rust/$(1); cargo build --release; )
-	mv rust/$(1)/target/release/$(1) $(BINDIR)
+	( cd $(RUSTDIR)/$(1); cargo build --release; )
+	mv $(RUSTDIR)/$(1)/target/release/$(1) $(BINDIR)
 endef
 
 $(foreach RUSTAPP,$(RUSTAPPS),\
