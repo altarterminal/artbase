@@ -36,7 +36,7 @@ do
     -n*)                 opt_n=${arg#-n}      ;;
     -s*)                 opt_s=${arg#-s}      ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ] ; then
+      if [ $i -eq $# ] && [ -z "$opr" ]; then
         opr=$arg
       else
         echo "${0##*/}: invalid args" 1>&2
@@ -59,13 +59,13 @@ else
 fi
 
 # 有効な数列であるか判定
-if ! printf '%s' "$opt_n" | grep -Eq '^[0-9]+(,[0-9]+)*$'; then
+if ! printf '%s\n' "$opt_n" | grep -Eq '^[0-9]+(,[0-9]+)*$'; then
   echo "${0##*/}: \"$opt_n\" invalid number sequence" 1>&2
   exit 31
 fi
 
 # 有効な文字列であるか判定
-if ! printf '%s' "$opt_s" | grep -Eq '^.(,.)*$'; then
+if ! printf '%s\n' "$opt_s" | grep -Eq '^.(,.)*$'; then
   echo "${0##*/}: \"$opt_s\" invalid character sequence" 1>&2
   exit 41
 fi

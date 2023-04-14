@@ -33,7 +33,7 @@ do
     -h|--help|--version) print_usage_and_exit ;;    
     -n*)                 opt_n=${arg#-n}      ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ] ; then
+      if [ $i -eq $# ] && [ -z "$opr" ]; then
         opr=$arg
       else
         echo "${0##*/}: invalid args" 1>&2
@@ -56,7 +56,7 @@ else
 fi
 
 # 有効な数値であるか判定
-if ! printf '%s' "$opt_n" | grep -Eq '^[0-9]+$'; then
+if ! printf '%s\n' "$opt_n" | grep -Eq '^[0-9]+$'; then
   echo "${0##*/}: \"$opt_n\" invalid number" 1>&2
   exit 31
 fi

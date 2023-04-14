@@ -33,7 +33,7 @@ do
     -h|--help|--version) print_usage_and_exit ;;
     -c)                  opt_c='yes'          ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ] ; then
+      if [ $i -eq $# ] && [ -z "$opr" ]; then
         opr=$arg
       else
         echo "${0##*/}: invalid args" 1>&2

@@ -44,13 +44,13 @@ do
 done
 
 # 有効な数値であるか判定
-if ! printf '%s' "$opt_r" | grep -Eq '^[0-9]+$'; then
+if ! printf '%s\n' "$opt_r" | grep -Eq '^[0-9]+$'; then
   echo "${0##*/}: \"$opt_r\" invalid number" 1>&2
   exit 21
 fi
 
 # 有効な数値であるか判定
-if ! printf '%s' "$opt_c" | grep -Eq '^[0-9]+$'; then
+if ! printf '%s\n' "$opt_c" | grep -Eq '^[0-9]+$'; then
   echo "${0##*/}: \"$opt_c\" invalid number" 1>&2
   exit 31
 fi
