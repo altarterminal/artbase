@@ -33,7 +33,7 @@ pub struct Arg
     #[clap(short='m', long="msec")]
     msec: u32,
 
-    #[clap(short='w', long="wait", default_value="0u32")]
+    #[clap(short='w', long="wait", default_value="0")]
     initwait: u32,
 
     filename: Option<String>,
