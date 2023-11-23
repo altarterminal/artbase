@@ -104,6 +104,32 @@ BEGIN {
   t["Ｕ"] = sprintf(fmt, 0x34, c); # 濃い茶
   t["Ｘ"] = sprintf(fmt, 0x5E, c); # 木
 
+  # グレースケール
+  t["ａ"] = sprintf(fmt, 0xE8, c);
+  t["ｂ"] = sprintf(fmt, 0xE9, c);
+  t["ｃ"] = sprintf(fmt, 0xEA, c);
+  t["ｄ"] = sprintf(fmt, 0xEB, c);
+  t["ｅ"] = sprintf(fmt, 0xEC, c);
+  t["ｆ"] = sprintf(fmt, 0xED, c);
+  t["ｇ"] = sprintf(fmt, 0xEE, c);
+  t["ｈ"] = sprintf(fmt, 0xEF, c);
+  t["ｉ"] = sprintf(fmt, 0xF0, c);
+  t["ｊ"] = sprintf(fmt, 0xF1, c);
+  t["ｋ"] = sprintf(fmt, 0xF2, c);
+  t["ｌ"] = sprintf(fmt, 0xF3, c);
+  t["ｍ"] = sprintf(fmt, 0xF4, c);
+  t["ｎ"] = sprintf(fmt, 0xF5, c);
+  t["ｏ"] = sprintf(fmt, 0xF6, c);
+  t["ｐ"] = sprintf(fmt, 0xF7, c);
+  t["ｑ"] = sprintf(fmt, 0xF8, c);
+  t["ｒ"] = sprintf(fmt, 0xF9, c);
+  t["ｓ"] = sprintf(fmt, 0xFA, c);
+  t["ｔ"] = sprintf(fmt, 0xFB, c);
+  t["ｕ"] = sprintf(fmt, 0xFC, c);
+  t["ｖ"] = sprintf(fmt, 0xFD, c);
+  t["ｗ"] = sprintf(fmt, 0xFE, c);
+  t["ｘ"] = sprintf(fmt, 0xFF, c);
+
   if (ischeck == "yes") {
     # 出力色の確認用  
     printf "%s: %s\n", "Ｒ", t["Ｒ"];
@@ -127,6 +153,31 @@ BEGIN {
     printf "%s: %s\n", "Ｔ", t["Ｔ"];
     printf "%s: %s\n", "Ｕ", t["Ｕ"];
     printf "%s: %s\n", "Ｘ", t["Ｘ"];
+
+    printf "%s: %s\n", "ａ", t["ａ"];
+    printf "%s: %s\n", "ｂ", t["ｂ"];
+    printf "%s: %s\n", "ｃ", t["ｃ"];
+    printf "%s: %s\n", "ｄ", t["ｄ"];
+    printf "%s: %s\n", "ｅ", t["ｅ"];
+    printf "%s: %s\n", "ｆ", t["ｆ"];
+    printf "%s: %s\n", "ｇ", t["ｇ"];
+    printf "%s: %s\n", "ｈ", t["ｈ"];
+    printf "%s: %s\n", "ｉ", t["ｉ"];
+    printf "%s: %s\n", "ｊ", t["ｊ"];
+    printf "%s: %s\n", "ｋ", t["ｋ"];
+    printf "%s: %s\n", "ｌ", t["ｌ"];
+    printf "%s: %s\n", "ｍ", t["ｍ"];
+    printf "%s: %s\n", "ｎ", t["ｎ"];
+    printf "%s: %s\n", "ｏ", t["ｏ"];
+    printf "%s: %s\n", "ｐ", t["ｐ"];
+    printf "%s: %s\n", "ｑ", t["ｑ"];
+    printf "%s: %s\n", "ｒ", t["ｒ"];
+    printf "%s: %s\n", "ｓ", t["ｓ"];
+    printf "%s: %s\n", "ｔ", t["ｔ"];
+    printf "%s: %s\n", "ｕ", t["ｕ"];
+    printf "%s: %s\n", "ｖ", t["ｖ"];
+    printf "%s: %s\n", "ｗ", t["ｗ"];
+    printf "%s: %s\n", "ｘ", t["ｘ"];
 
     exit;
   }
