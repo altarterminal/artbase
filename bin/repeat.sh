@@ -2,42 +2,40 @@
 set -eu
 
 ######################################################################
-# 設定
-######################################################################
+# help
+#####################################################################
 
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
-	Usage   : ${0##*/} -n<繰り返し回数> [テキストファイル]
-	Options :
+	Usage   : ${0##*/} <text file>
+	Options : -n<repeat num>
 
-	テキストを繰り返し出力する。
+	Output the text repeatedly.
 
-	-nオプションで繰り返し回数を指定できる。
+	-n: Specify the number of repeat (default: 2).
 	USAGE
   exit 1
 }
 
-######################################################################
-# パラメータ
-######################################################################
+#####################################################################
+# parameter
+#####################################################################
 
-# 変数を初期化
 opr=''
-opt_n=''
+opt_n='2'
 
-# 引数をパース
 i=1
 for arg in ${1+"$@"}
 do
-  case "$arg" in
-    -h|--help|--version) print_usage_and_exit ;;    
-    -n*)                 opt_n=${arg#-n}      ;;
+  case "${arg}" in
+    -h|--help|--version) print_usage_and_exit ;;
+    -n*)                 opt_n="${arg#-n}"    ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ]; then
-        opr=$arg
+      if [ $i -eq $# ] && [ -z "${opr}" ]; then
+        opr="${arg}"
       else
-        echo "${0##*/}: invalid args" 1>&2
-        exit 11
+        echo "ERROR:${0##*/}: invalid args" 1>&2
+        exit 1
       fi
       ;;
   esac
@@ -45,36 +43,32 @@ do
   i=$((i + 1))
 done
 
-# 標準入力または読み取り可能な通常ファイルであるか判定
-if   [ "_$opr" = '_' ] || [ "_$opr" = '_-' ]; then     
-  opr=''
-elif [ ! -f "$opr"   ] || [ ! -r "$opr"    ]; then
-  echo "${0##*/}: \"$opr\" cannot be opened" 1>&2
-  exit 21
+if   [ "${opr}" = '' ] || [ "${opr}" = '-' ]; then
+  opr='-'
+elif [ ! -f "${opr}" ] || [ ! -r "${opr}"  ]; then
+  echo "ERROR:${0##*/}: invalid file specified <${opr}>" 1>&2
+  exit 1
 else
   :
 fi
 
-# 有効な数値であるか判定
-if ! printf '%s\n' "$opt_n" | grep -Eq '^[0-9]+$'; then
-  echo "${0##*/}: \"$opt_n\" invalid number" 1>&2
-  exit 31
+if ! printf '%s\n' "${opt_n}" | grep -Eq '^[0-9]+$'; then
+  echo "ERROR:${0##*/}: invalid number specified <${opt_n}>" 1>&2
+  exit 1
 fi
 
-# パラメータを決定
-text=$opr
-nrep=$opt_n
+readonly TEXT_FILE="${opr}"
+readonly REPEAT_NUM="${opt_n}"
 
-######################################################################
-# 本体処理
-######################################################################
+#####################################################################
+# main routine
+#####################################################################
 
-# コンテンツを入力
-cat ${text:+"$text"}                                                 |
+cat "${TEXT_FILE}"                                                  |
 
 gawk '
 BEGIN {
-  nrep = '"${nrep}"';
+  REPEAT_NUM = '"${REPEAT_NUM}"';
 }
 
 {
@@ -82,10 +76,8 @@ BEGIN {
 }
 
 END {
-  for (i = 1; i <= nrep; i++) {
-    for (j = 1; j <= NR; j++) {
-      print buf[j];
-    }
+  for (i = 1; i <= REPEAT_NUM; i++) {
+    for (j = 1; j <= NR; j++) { print buf[j]; }
   }
 }
 '

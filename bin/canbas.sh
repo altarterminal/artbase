@@ -2,85 +2,80 @@
 set -eu
 
 ######################################################################
-# 設定
+# help
 ######################################################################
 
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
-	Usage   : ${0##*/} -r<行数> -c<列数>
-	Options : -p<構成文字>
+	Usage   : ${0##*/} -r<row num> -c<col num>
+	Options : -p<character>
 
-	文字を矩形状に並べて出力する。
+	Arrange characters in a rectangular shape and output them.
 
-	-rオプションで行数を指定する。
-	-cオプションで列数を指定する。
-	-pオプションで構成文字を指定できる。デフォルトは"□"。
+	-r: Specify the number of rows.
+	-c: Specify the number of cols.
+	-p: Specify the character (default "□").
 	USAGE
   exit 1
 }
 
-######################################################################
-# パラメータ
-######################################################################
+#####################################################################
+# parameter
+#####################################################################
 
-# 変数を初期化
 opt_r=''
 opt_c=''
 opt_p='□'
 
-# 引数をパース
 i=1
 for arg in ${1+"$@"}
 do
-  case "$arg" in
+  case "${arg}" in
     -h|--help|--version) print_usage_and_exit ;;    
-    -r*)                 opt_r=${arg#-r}      ;;
-    -c*)                 opt_c=${arg#-c}      ;;
-    -p*)                 opt_p=${arg#-p}      ;;
+    -r*)                 opt_r="${arg#-r}"    ;;
+    -c*)                 opt_c="${arg#-c}"    ;;
+    -p*)                 opt_p="${arg#-p}"    ;;
     *)
-      echo "${0##*/}: invalid args" 1>&2
-      exit 11
+      echo "ERROR:${0##*/}: invalid args" 1>&2
+      exit 1
       ;;
   esac
 
   i=$((i + 1))
 done
 
-# 有効な数値であるか判定
-if ! printf '%s\n' "$opt_r" | grep -Eq '^[0-9]+$'; then
-  echo "${0##*/}: \"$opt_r\" invalid number" 1>&2
-  exit 21
+if ! printf '%s\n' "${opt_r}" | grep -Eq '^[0-9]+$'; then
+  echo "ERROR:${0##*/}: invalid number specified <${opt_r}>" 1>&2
+  exit 1
 fi
 
-# 有効な数値であるか判定
-if ! printf '%s\n' "$opt_c" | grep -Eq '^[0-9]+$'; then
-  echo "${0##*/}: \"$opt_c\" invalid number" 1>&2
-  exit 31
+if ! printf '%s\n' "${opt_c}" | grep -Eq '^[0-9]+$'; then
+  echo "ERROR:${0##*/}: invalid number specified <${opt_c}>" 1>&2
+  exit 1
 fi
 
-# 有効な１文字であるか判定
-if ! printf '%s\n' "$opt_p" | grep -Eq '^.$'; then
-  echo "${0##*/}: \"$opt_p\" invalid character" 1>&2
-  exit 41
+if ! printf '%s\n' "${opt_p}" | grep -Eq '^.$'; then
+  echo "ERROR:${0##*/}: invalid character specified <${opt_p}>" 1>&2
+  exit 1
 fi
 
-# パラメータを決定
-height=$opt_r
-width=$opt_c
-tchar=$opt_p
+readonly HEIGHT="${opt_r}"
+readonly WIDTH="${opt_c}"
+readonly CHAR="${opt_p}"
 
 ######################################################################
-# 本体処理
+# main routine
 ######################################################################
 
 gawk '
 BEGIN {
-  height = '"${height}"';
-  width  = '"${width}"';
-  tchar  = "'"${tchar}"'";
+  height = '"${HEIGHT}"';
+  width  = '"${WIDTH}"';
+
+  char = "'"${CHAR}"'";
 
   for (i = 1; i <= height; i++) {
-    for (j = 1; j <= width; j++) { printf "%s", tchar; }
+    for (j = 1; j <= width; j++) { printf "%s", char; }
     print "";
   }
 }

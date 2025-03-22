@@ -1,43 +1,41 @@
 #!/bin/sh
 set -eu
 
-######################################################################
-# 設定
-######################################################################
+#####################################################################
+# help
+#####################################################################
 
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
-	Usage   : ${0##*/} -r<行数> [テキストファイル]
+	Usage   : ${0##*/} -r<row num> <text file>
 	Options :
 
-	指定行数のテキストを出力した後、ターミナルのカーソルを原点に戻す。
+	Return the terminal cursor to the origin.
 
-	-rオプションでリセットの行数を指定できる。
+	-r: Specify the number of rows to reset cursor.
 	USAGE
   exit 1
 }
 
-######################################################################
-# パラメータ
-######################################################################
+#####################################################################
+# parameter
+#####################################################################
 
-# 変数を初期化
 opr=''
 opt_r=''
 
-# 引数をパース
 i=1
 for arg in ${1+"$@"}
 do
-  case "$arg" in
+  case "${arg}" in
     -h|--help|--version) print_usage_and_exit ;;    
-    -r*)                 opt_r=${arg#-r}      ;;
+    -r*)                 opt_r="${arg#-r}"    ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ]; then
-        opr=$arg
+      if [ $i -eq $# ] && [ -z "${opr}" ]; then
+        opr="${arg}"
       else
-        echo "${0##*/}: invalid args" 1>&2
-        exit 11
+        echo "ERROR:${0##*/}: invalid args" 1>&2
+        exit 1
       fi
       ;;
   esac
@@ -45,46 +43,43 @@ do
   i=$((i + 1))
 done
 
-# 標準入力または読み取り可能な通常ファイルであるか判定
-if   [ "_$opr" = '_' ] || [ "_$opr" = '_-' ]; then     
-  opr=''
-elif [ ! -f "$opr"   ] || [ ! -r "$opr"    ]; then
-  echo "${0##*/}: \"$opr\" cannot be opened" 1>&2
-  exit 21
+if   [ "${opr}" = '' ] || [ "${opr}" = '-' ]; then
+  opr='-'
+elif [ ! -f "${opr}" ] || [ ! -r "${opr}"  ]; then
+  echo "ERROR:${0##*/}: invalid file specified <${opr}>" 1>&2
+  exit 1
 else
   :
 fi
 
-# 有効な数値であるか判定
-if ! printf '%s\n' "$opt_r" | grep -Eq '^[0-9]+$'; then
-  echo "${0##*/}: \"$opt_r\" invalid number" 1>&2
-  exit 31
+if ! printf '%s\n' "${opt_r}" | grep -Eq '^[0-9]+$'; then
+  echo "${0##*/}: invalid number specified <${opt_r}>" 1>&2
+  exit 1
 fi
 
-# パラメータを決定
-text=$opr
-height=$opt_r
+readonly TEXT_FILE="${opr}"
+readonly HEIGHT="${opt_r}"
 
-######################################################################
-# 本体処理
-######################################################################
+#####################################################################
+# main routine
+#####################################################################
 
-cat ${text:+"$text"}                                                 |
+cat "${TEXT_FILE}"                                                  |
 
 gawk '
 BEGIN {
-  height = '"$height"';
+  height = '"${HEIGHT}"';
 
-  rcnt = 0;
+  row_cnt = 0;
 }
 
 {
   print;
 
-  rcnt++;
-  if (rcnt >= height) {
+  row_cnt++;
+  if (row_cnt >= height) {
     printf "\033[1;1H";
-    rcnt = 0;
+    row_cnt = 0;
   }
 }
 '
