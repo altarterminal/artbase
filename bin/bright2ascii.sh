@@ -1,46 +1,44 @@
 #!/bin/sh
 set -eu
 
-######################################################################
-# 設定
-######################################################################
+#####################################################################
+# help
+#####################################################################
 
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
-	Usage   : ${0##*/} [輝度値ファイル]
-	Options : -n<数列> -s<文字列>
+	Usage   : ${0##*/} <text file>
+	Options : -n<number seq> -s<character seq>
 
-	輝度値をアスキーアート文字に変換する。
+	Transform the brightness to character according to its value.
 
-	-nオプションで輝度値の境界を指定できる。数字は","で区切る。デフォルトは"51,102,160,214"。
-	-sオプションで表示文字を指定できる。文字は","で区切る。デフォルトは"　,・,＋,※,■"。
+	-n: Specify the borders of brightness (default: "51,102,160,214").
+	-s: Specify the display characters (default: "　,・,＋,※,■").
 	USAGE
   exit 1
 }
 
-######################################################################
-# パラメータ
-######################################################################
+#####################################################################
+# parameter
+#####################################################################
 
-# 変数を初期化
 opr=''
 opt_n='51,102,160,214'
 opt_s='　,・,＋,※,■'
 
-# 引数をパース
 i=1
 for arg in ${1+"$@"}
 do
-  case "$arg" in
+  case "${arg}" in
     -h|--help|--version) print_usage_and_exit ;;
-    -n*)                 opt_n=${arg#-n}      ;;
-    -s*)                 opt_s=${arg#-s}      ;;
+    -n*)                 opt_n="${arg#-n}"    ;;
+    -s*)                 opt_s="${arg#-s}"    ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ]; then
-        opr=$arg
+      if [ $i -eq $# ] && [ -z "${opr}" ]; then
+        opr="${arg}"
       else
-        echo "${0##*/}: invalid args" 1>&2
-        exit 11
+        echo "ERROR:${0##*/}: invalid args" 1>&2
+        exit 1
       fi
       ;;
   esac
@@ -48,73 +46,75 @@ do
   i=$((i + 1))
 done
 
-# 標準入力または読み取り可能な通常ファイルであるか判定
-if   [ "_$opr" = '_' ] || [ "_$opr" = '_-' ]; then     
-  opr=''
-elif [ ! -f "$opr"   ] || [ ! -r "$opr"    ]; then
-  echo "${0##*/}: \"$opr\" cannot be opened" 1>&2
-  exit 21
+if   [ "${opr}" = '' ] || [ "${opr}" = '-' ]; then     
+  opr='-'
+elif [ ! -f "${opr}" ] || [ ! -r "${opr}"  ]; then
+  echo "ERROR:${0##*/}: invalid file specified <${opr}>" 1>&2
+  exit 1
 else
   :
 fi
 
-# 有効な数列であるか判定
-if ! printf '%s\n' "$opt_n" | grep -Eq '^[0-9]+(,[0-9]+)*$'; then
-  echo "${0##*/}: \"$opt_n\" invalid number sequence" 1>&2
-  exit 31
+if ! printf '%s\n' "${opt_n}" | grep -Eq '^[0-9]+(,[0-9]+)*$'; then
+  echo "ERROR:${0##*/}: invalid number sequence specified <${opt_n}>" 1>&2
+  exit 1
 fi
 
-# 有効な文字列であるか判定
-if ! printf '%s\n' "$opt_s" | grep -Eq '^.(,.)*$'; then
-  echo "${0##*/}: \"$opt_s\" invalid character sequence" 1>&2
-  exit 41
+if ! printf '%s\n' "${opt_s}" | grep -Eq '^.(,.)*$'; then
+  echo "ERROR:${0##*/}: invalid character sequence specified <${opt_s}>" 1>&2
+  exit 1
 fi
 
-# パラメータを決定
-bright=$opr
-nums=$opt_n
-chas=$opt_s
+readonly TEXT_FILE="${opr}"
+readonly NUM_SEQ="${opt_n}"
+readonly CHAR_SEQ="${opt_s}"
 
-######################################################################
-# 本体処理
-######################################################################
+#####################################################################
+# main routine
+#####################################################################
+
+cat "${TEXT_FILE}"                                                  |
 
 gawk '
 BEGIN {
-  # パラメータを設定
-  nums = "'"${nums}"'";
-  chas = "'"${chas}"'";
+  num_seq  = "'"${NUM_SEQ}"'";
+  char_seq = "'"${CHAR_SEQ}"'";
 
-  # 数列と文字列を配列に分離
-  nn = split(nums, nary, ",");
-  cn = split(chas, cary, ",");
+  max_num = 255;
 
-  # 数字と文字の数に不整合があればエラーを出力して終了
+  nn = split(num_seq, num_list, ",");
+  cn = split(char_seq, char_list, ",");
+
   if (nn != (cn - 1)) {
-     print "'"${0##*/}"': invalid sequence length" > "/dev/stderr";
-     exit 51;
+    print "ERROR:'"${0##*/}"': invalid sequence length" >"/dev/stderr";
+    exit 1;
   }
 
-  # 数列の大小関係に不整合があればエラーを出力して終了
-  for (i = 1; i <= (nn-1); i++) {
-    if (nary[i] >= nary[i+1]) {
-      print "'"${0##*/}"': invalid number sequence" > "/dev/stderr";
-      exit 52;
+  for (i = 1; i <= (nn - 1); i++) {
+    if (num_list[i] >= num_list[i+1]) {
+      print "ERROR:'"${0##*/}"': invalid size relationship" >"/dev/stderr";
+      exit 1;
     }
   }
+
+  num_list[0]  = 1;
+  num_list[cn] = 256;
+
+  begin_idx = num_list[0]
+  end_idx   = num_list[1];
+
+  for (ci = 1; ci <= cn; ci++) {
+    for (j = begin_idx; j < end_idx; j++) { c[j] = char_list[ci]; }
+
+    begin_idx = num_list[ci];
+    end_idx   = num_list[ci+1];
+  }
+
+  c[begin_idx] = char_list[cn]
 }
 
 {
-  for (i = 1; i <= NF; i++) {
-    # 最後尾以外の区間に含まれる場合にこのコードで捕捉
-    for (j = 1; j <= nn; j++) {
-      if ($i <= nary[j]) { printf "%s", cary[j]; break; }
-    }
-
-    # 最後尾の区間に含まれる場合はこのコードで捕捉
-    if (j == (nn+1)) { printf "%s", cary[j]; }
-  }
-
+  for (i = 1; i <= NF; i++) { printf "%s", c[$i]; }
   print "";
 }
-' ${bright-:"$bright"}
+'

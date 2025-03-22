@@ -1,43 +1,41 @@
 #!/bin/sh
 set -eu
 
-######################################################################
-# 設定
-######################################################################
+#####################################################################
+# help
+#####################################################################
 
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
-	Usage   : ${0##*/} [カラーファイル]
+	Usage   : ${0##*/} <text file>
 	Options : -c
 
-	全角大文字アルファベットで指定した色をエスケープシーケンスによるカラー出力に変換する。
+	Transform the fullcase and uppercase alphabetical character into color by escape sequence.
 
-	-cオプションで出力できる色を確認できる（他に処理をせずに終了）。
+	-c: Enable the mode of checking color to output (Finish without process of transforming).
 	USAGE
   exit 1
 }
 
-######################################################################
-# パラメータ
-######################################################################
+#####################################################################
+# parameter
+#####################################################################
 
-# 変数を初期化
 opr=''
 opt_c='no'
 
-# 引数をパース
 i=1
 for arg in ${1+"$@"}
 do
-  case "$arg" in
+  case "${arg}" in
     -h|--help|--version) print_usage_and_exit ;;
     -c)                  opt_c='yes'          ;;
     *)
-      if [ $i -eq $# ] && [ -z "$opr" ]; then
-        opr=$arg
+      if [ $i -eq $# ] && [ -z "${opr}" ]; then
+        opr="${arg}"
       else
-        echo "${0##*/}: invalid args" 1>&2
-        exit 11
+        echo "ERROR:${0##*/}: invalid args" 1>&2
+        exit 1
       fi
       ;;
   esac
@@ -45,42 +43,35 @@ do
   i=$((i + 1))
 done
 
-# 標準入力または読み取り可能な通常ファイルであるか判定
-if   [ "_$opr" = '_' ] || [ "_$opr" = '_-' ]; then     
-  opr=''
-elif [ ! -f "$opr"   ] || [ ! -r "$opr"    ]; then
-  echo "${0##*/}: \"$opr\" cannot be opened" 1>&2
-  exit 21
+if   [ "${opr}" = '' ] || [ "${opr}" = '-' ]; then
+  opr='-'
+elif [ ! -f "${opr}" ] || [ ! -r "${opr}"  ]; then
+  echo "ERROR:${0##*/}: invalid file specified <${opr}>" 1>&2
+  exit 1
 else
   :
 fi
 
-# パラメータを決定
-content=$opr
-ischeck=$opt_c
+readonly TEXT_FILE="${opr}"
+readonly IS_CHECK="${opt_c}"
 
-######################################################################
-# 本体処理
-######################################################################
+#####################################################################
+# main routine
+#####################################################################
 
-if [ "$ischeck" = 'yes' ]; then
-  # カラーチェックの場合は標準入力や入力ファイルを無視
+if [ "${IS_CHECK}" = 'yes' ]; then
   echo 'this is dummy'
 else  
-  # コンテンツを入力
-  cat ${content:+"$content"}
-fi                                                                   |
+  cat "${TEXT_FILE}"
+fi                                                                  |
 
 gawk -v FS='' -v OFS='' '
 BEGIN {
-  # 表示文字
   c   = "■"
   fmt = "\033[38;5;%dm%c\033[0m";
 
-  # オプション
-  ischeck = "'"${ischeck}"'";
+  is_check = "'"${IS_CHECK}"'";
 
-  # インデックスは全角なので注意
   t["Ｒ"] = sprintf(fmt, 0x09, c); # 赤
   t["Ｏ"] = sprintf(fmt, 0xD0, c); # 橙
   t["Ｙ"] = sprintf(fmt, 0xE2, c); # 黄
@@ -130,8 +121,7 @@ BEGIN {
   t["ｗ"] = sprintf(fmt, 0xFE, c);
   t["ｘ"] = sprintf(fmt, 0xFF, c);
 
-  if (ischeck == "yes") {
-    # 出力色の確認用  
+  if (is_check == "yes") {
     printf "%s: %s\n", "Ｒ", t["Ｒ"];
     printf "%s: %s\n", "Ｏ", t["Ｏ"];
     printf "%s: %s\n", "Ｙ", t["Ｙ"];
